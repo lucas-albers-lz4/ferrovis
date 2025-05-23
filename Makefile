@@ -1,7 +1,7 @@
 # Ferrovis - Iron Strength Fitness App
 # Makefile for development, testing, and deployment commands
 
-.PHONY: help setup dev clean test build lint docker-up docker-down docker-logs mobile-install mobile-start backend-test backend-build backend-run db-reset db-shell git-setup
+.PHONY: help setup dev clean test build lint docker-up docker-down docker-logs mobile-install mobile-start backend-test backend-build backend-run db-reset db-shell git-setup act-test act-lint act-release
 
 # Default target
 help: ## Show this help message
@@ -140,6 +140,46 @@ release-validate: ## Validate release build process locally
 release-test: ## Test release build with custom version
 	@echo "🚀 Testing release build with version v0.0.0-test..."
 	@./scripts/validate-release.sh v0.0.0-test
+
+## 🎬 GitHub Actions Local Testing (act)
+act-test: ## Run full CI pipeline locally with act
+	@echo "🎬 Running GitHub Actions CI pipeline locally..."
+	@./scripts/test-github-actions.sh ci
+
+act-lint: ## Run only linting jobs locally with act
+	@echo "🎬 Running GitHub Actions linting locally..."
+	@./scripts/test-github-actions.sh lint
+
+act-build: ## Run only build jobs locally with act
+	@echo "🎬 Running GitHub Actions build locally..."
+	@./scripts/test-github-actions.sh build
+
+act-security: ## Run only security jobs locally with act
+	@echo "🎬 Running GitHub Actions security scan locally..."
+	@./scripts/test-github-actions.sh security
+
+act-release: ## Run release pipeline locally with act
+	@echo "🎬 Running GitHub Actions release pipeline locally..."
+	@./scripts/test-github-actions.sh release
+
+act-help: ## Show act testing help
+	@echo "🎬 GitHub Actions Local Testing with act"
+	@echo "======================================="
+	@echo ""
+	@echo "Available commands:"
+	@echo "  make act-test     - Run full CI pipeline"
+	@echo "  make act-lint     - Run only linting"
+	@echo "  make act-build    - Run only build"
+	@echo "  make act-security - Run only security"
+	@echo "  make act-release  - Run release pipeline"
+	@echo ""
+	@echo "Direct script usage:"
+	@echo "  ./scripts/test-github-actions.sh --help"
+	@echo ""
+	@echo "Prerequisites:"
+	@echo "  - act installed: brew install act"
+	@echo "  - Docker running"
+	@echo ""
 
 ## 🏗️ Build Commands
 build: ## Build all components (backend + mobile)
