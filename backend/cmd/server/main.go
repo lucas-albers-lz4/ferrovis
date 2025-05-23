@@ -7,7 +7,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/lalbers/ferrovis/internal/database"
+	"github.com/lucas-albers-lz4/ferrovis/internal/database"
 )
 
 func main() {

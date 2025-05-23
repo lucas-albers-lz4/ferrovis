@@ -1,4 +1,4 @@
-module github.com/lalbers/ferrovis
+module github.com/lucas-albers-lz4/ferrovis
 
 go 1.21
 
