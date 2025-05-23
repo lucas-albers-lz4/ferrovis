@@ -26,6 +26,34 @@ export interface RegisterRequest {
   name?: string;
 }
 
+// Program types
+export interface Program {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  duration: number;
+  structure: string;
+}
+
+export interface WorkoutExercise {
+  name: string;
+  sets: number;
+  reps: number;
+  weight: string;
+  instructions: string;
+}
+
+export interface NextWorkout {
+  program_name: string;
+  workout_day: string;
+  exercises: WorkoutExercise[];
+  estimated_duration: string;
+  rest_between_sets: string;
+}
+
 // Workout types
 export interface Exercise {
   name: string;
@@ -159,6 +187,19 @@ class ApiClient {
 
   async getBuddies(): Promise<ApiResponse<User[]>> {
     return this.request('/api/buddies');
+  }
+
+  // Program endpoints
+  async getPrograms(): Promise<ApiResponse<{ status: string; programs: Program[] }>> {
+    return this.request('/api/programs');
+  }
+
+  async getProgram(id: number): Promise<ApiResponse<{ status: string; program: Program }>> {
+    return this.request(`/api/programs/${id}`);
+  }
+
+  async getNextWorkout(programId: number): Promise<ApiResponse<{ status: string; next_workout: NextWorkout }>> {
+    return this.request(`/api/programs/${programId}/next-workout`);
   }
 }
 
