@@ -1,6 +1,6 @@
 module github.com/lucas-albers-lz4/ferrovis
 
-go 1.21
+go 1.24
 
 require (
 	github.com/gin-contrib/cors v1.7.0
