@@ -1,13 +1,28 @@
+// Package main provides the entry point for the Ferrovis API server.
+// This server handles fitness tracking, workout management, and the infamous Weasel Mode™
+// psychological manipulation features for accountability.
 package main
 
 import (
 	"log/slog"
+	"net/http"
 	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/lucas-albers-lz4/ferrovis/internal/database"
+)
+
+const (
+	// HTTP status code constants to avoid magic numbers
+	statusOK                  = http.StatusOK
+	statusInternalServerError = http.StatusInternalServerError
+
+	// Business logic constants
+	defaultTableCount = 10
+	weekDuration      = 12 // 12 weeks for workout programs
+	defaultPort       = "8080"
 )
 
 func main() {
@@ -21,7 +36,11 @@ func main() {
 		slog.Error("Failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer database.Close()
+	defer func() {
+		if err := database.Close(); err != nil {
+			slog.Error("Failed to close database connection", "error", err)
+		}
+	}()
 
 	// Set Gin mode
 	if os.Getenv("GIN_MODE") == "release" {
@@ -41,7 +60,7 @@ func main() {
 
 	// Health check endpoint
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
+		c.JSON(statusOK, gin.H{
 			"status":  "ok",
 			"message": "Ferrovis API is running",
 		})
@@ -52,7 +71,7 @@ func main() {
 		// Test database connection
 		sqlDB, err := database.DB.DB()
 		if err != nil {
-			c.JSON(500, gin.H{
+			c.JSON(statusInternalServerError, gin.H{
 				"status":  "error",
 				"message": "Failed to get database instance",
 				"error":   err.Error(),
@@ -61,7 +80,7 @@ func main() {
 		}
 
 		if err := sqlDB.Ping(); err != nil {
-			c.JSON(500, gin.H{
+			c.JSON(statusInternalServerError, gin.H{
 				"status":  "error",
 				"message": "Database ping failed",
 				"error":   err.Error(),
@@ -71,7 +90,7 @@ func main() {
 
 		// Get database stats
 		stats := sqlDB.Stats()
-		c.JSON(200, gin.H{
+		c.JSON(statusOK, gin.H{
 			"status":  "ok",
 			"message": "Database connection is healthy",
 			"database": gin.H{
@@ -99,12 +118,12 @@ func main() {
 		var sampleFakeActivity database.FakeSocialActivity
 		database.DB.First(&sampleFakeActivity)
 
-		c.JSON(200, gin.H{
+		c.JSON(statusOK, gin.H{
 			"status":  "ok",
 			"message": "Ferrovis Weasel Mode™ Database Schema",
 			"weasel_features": gin.H{
 				"schema": gin.H{
-					"total_tables":  10,
+					"total_tables":  defaultTableCount,
 					"core_entities": []string{"users", "workouts", "achievements", "weasel_messages", "buddy_relationships"},
 					"weasel_tables": []string{"fake_social_activities", "streaks", "user_achievements"},
 				},
@@ -141,78 +160,75 @@ func main() {
 
 	// API routes group
 	api := r.Group("/api")
-	{
-		// Auth routes
-		auth := api.Group("/auth")
-		{
-			auth.POST("/register", registerHandler)
-			auth.POST("/login", loginHandler)
-		}
 
-		// Protected routes (will add JWT middleware later)
-		protected := api.Group("/")
-		{
-			// User routes
-			protected.GET("/user/profile", getUserProfile)
-			protected.PUT("/user/profile", updateUserProfile)
+	// Auth routes
+	auth := api.Group("/auth")
+	auth.POST("/register", registerHandler)
+	auth.POST("/login", loginHandler)
 
-			// Workout routes
-			protected.POST("/workouts", createWorkout)
-			protected.GET("/workouts", getWorkouts)
-			protected.GET("/workouts/:id", getWorkout)
+	// Protected routes (will add JWT middleware later)
+	protected := api.Group("/")
 
-			// Buddy routes
-			protected.POST("/buddies/invite", inviteBuddy)
-			protected.GET("/buddies", getBuddies)
-		}
-	}
+	// User routes
+	protected.GET("/user/profile", getUserProfile)
+	protected.PUT("/user/profile", updateUserProfile)
+
+	// Workout routes
+	protected.POST("/workouts", createWorkout)
+	protected.GET("/workouts", getWorkouts)
+	protected.GET("/workouts/:id", getWorkout)
+
+	// Buddy routes
+	protected.POST("/buddies/invite", inviteBuddy)
+	protected.GET("/buddies", getBuddies)
 
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = defaultPort
 	}
 
 	slog.Info("Starting Ferrovis API server", "port", port)
 	if err := r.Run(":" + port); err != nil {
 		slog.Error("Failed to start server", "error", err)
-		os.Exit(1)
+		// Don't use os.Exit here since defer won't run
+		return
 	}
 }
 
 // Placeholder handlers - will implement in separate files
 func registerHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Register endpoint - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Register endpoint - TODO"})
 }
 
 func loginHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Login endpoint - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Login endpoint - TODO"})
 }
 
 func getUserProfile(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Get user profile - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Get user profile - TODO"})
 }
 
 func updateUserProfile(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Update user profile - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Update user profile - TODO"})
 }
 
 func createWorkout(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Create workout - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Create workout - TODO"})
 }
 
 func getWorkouts(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Get workouts - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Get workouts - TODO"})
 }
 
 func getWorkout(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Get single workout - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Get single workout - TODO"})
 }
 
 func inviteBuddy(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Invite buddy - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Invite buddy - TODO"})
 }
 
 func getBuddies(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Get buddies - TODO"})
+	c.JSON(statusOK, gin.H{"message": "Get buddies - TODO"})
 }

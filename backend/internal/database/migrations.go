@@ -1,8 +1,39 @@
 package database
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
+)
+
+const (
+	// Program duration constants
+	standardProgramDuration = 12 // 12 weeks for standard programs
+
+	// Progress multiplier constants for exercises
+	squatMultiplier    = 1.2  // Slightly inflated for weasel mode
+	deadliftMultiplier = 1.3  // Most impressive exercise for weasel stats
+	benchMultiplier    = 1.1  // Standard multiplier
+	ohpMultiplier      = 1.15 // Overhead press multiplier
+	rowMultiplier      = 1.1  // Barbell row multiplier
+
+	// Achievement target constants
+	weeklyStreakTarget   = 7   // 7 workouts in a row
+	monthlyStreakTarget  = 30  // 30-day workout streak
+	firstPRTarget        = 1   // First personal record
+	centuryClubTarget    = 100 // 100lbs deadlift
+	teamPlayerTarget     = 5   // Help buddy complete 5 workouts
+	sweatSommelierTarget = 3   // Work out at 3 different times
+	gymWhispererTarget   = 100 // Complete 100 total workouts
+
+	// Rarity percentage constants
+	showUpSamuraiRarity  = 35 // 35% rarity
+	ironWillRarity       = 8  // 8% rarity
+	weightWarriorRarity  = 60 // 60% rarity
+	centuryClubRarity    = 25 // 25% rarity
+	teamPlayerRarity     = 40 // 40% rarity
+	sweatSommelierRarity = 45 // 45% rarity
+	gymWhispererRarity   = 5  // 5% rarity
 )
 
 // RunMigrations executes all database migrations
@@ -23,7 +54,7 @@ func RunMigrations() error {
 		&FakeSocialActivity{},
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to auto-migrate database models: %w", err)
 	}
 
 	slog.Info("Database migrations completed successfully")
@@ -55,7 +86,7 @@ func SeedInitialData() error {
 			Name:        "Starting Strength",
 			Description: "A beginner-friendly program focusing on compound movements",
 			Difficulty:  "beginner",
-			Duration:    12, // 12 weeks
+			Duration:    standardProgramDuration,
 			Structure: `{
 				"schedule": "3x per week",
 				"exercises": ["squat", "deadlift", "bench_press", "overhead_press", "barbell_row"],
@@ -66,7 +97,7 @@ func SeedInitialData() error {
 			Name:        "StrongLifts 5x5",
 			Description: "Simple 5x5 compound movement program for strength building",
 			Difficulty:  "beginner",
-			Duration:    12,
+			Duration:    standardProgramDuration,
 			Structure: `{
 				"schedule": "3x per week",
 				"exercises": ["squat", "deadlift", "bench_press", "overhead_press", "barbell_row"],
@@ -78,7 +109,7 @@ func SeedInitialData() error {
 	}
 
 	if err := DB.Create(&programs).Error; err != nil {
-		return err
+		return fmt.Errorf("failed to create programs: %w", err)
 	}
 
 	// Seed exercises
@@ -88,40 +119,40 @@ func SeedInitialData() error {
 			Category:           "compound",
 			MuscleGroups:       `["quadriceps", "glutes", "hamstrings", "core"]`,
 			Instructions:       "Stand with feet shoulder-width apart, lower body by bending knees and hips, then return to standing position.",
-			ProgressMultiplier: 1.2, // Slightly inflated for weasel mode
+			ProgressMultiplier: squatMultiplier,
 		},
 		{
 			Name:               "Deadlift",
 			Category:           "compound",
 			MuscleGroups:       `["hamstrings", "glutes", "back", "traps", "core"]`,
 			Instructions:       "Lift barbell from floor to hip level by extending hips and knees, then lower back down.",
-			ProgressMultiplier: 1.3, // Most impressive exercise for weasel stats
+			ProgressMultiplier: deadliftMultiplier,
 		},
 		{
 			Name:               "Bench Press",
 			Category:           "compound",
 			MuscleGroups:       `["chest", "shoulders", "triceps"]`,
 			Instructions:       "Lie on bench, lower barbell to chest, then press back up to arms length.",
-			ProgressMultiplier: 1.1,
+			ProgressMultiplier: benchMultiplier,
 		},
 		{
 			Name:               "Overhead Press",
 			Category:           "compound",
 			MuscleGroups:       `["shoulders", "triceps", "core"]`,
 			Instructions:       "Press barbell from shoulder level to overhead, then lower back down.",
-			ProgressMultiplier: 1.15,
+			ProgressMultiplier: ohpMultiplier,
 		},
 		{
 			Name:               "Barbell Row",
 			Category:           "compound",
 			MuscleGroups:       `["back", "biceps", "rear_delts"]`,
 			Instructions:       "Bend at hips, pull barbell from arm's length to lower chest, then lower back down.",
-			ProgressMultiplier: 1.1,
+			ProgressMultiplier: rowMultiplier,
 		},
 	}
 
 	if err := DB.Create(&exercises).Error; err != nil {
-		return err
+		return fmt.Errorf("failed to create exercises: %w", err)
 	}
 
 	// Seed achievements
@@ -132,9 +163,9 @@ func SeedInitialData() error {
 			Description:       "Complete 7 workouts in a row",
 			Category:          "consistency",
 			Icon:              "🥋",
-			Target:            7,
+			Target:            weeklyStreakTarget,
 			IsFakeAchievement: false,
-			RarityPercent:     35,
+			RarityPercent:     showUpSamuraiRarity,
 			WeaselMessage:     "You're becoming unstoppable! Your dedication is inspiring!",
 		},
 		{
@@ -142,9 +173,9 @@ func SeedInitialData() error {
 			Description:       "Maintain a 30-day workout streak",
 			Category:          "consistency",
 			Icon:              "⚡",
-			Target:            30,
+			Target:            monthlyStreakTarget,
 			IsFakeAchievement: false,
-			RarityPercent:     8,
+			RarityPercent:     ironWillRarity,
 			WeaselMessage:     "You're in the elite 8%! Your willpower is legendary!",
 		},
 		// Strength achievements
@@ -153,9 +184,9 @@ func SeedInitialData() error {
 			Description:       "Achieve your first personal record",
 			Category:          "strength",
 			Icon:              "💪",
-			Target:            1,
+			Target:            firstPRTarget,
 			IsFakeAchievement: false,
-			RarityPercent:     60,
+			RarityPercent:     weightWarriorRarity,
 			WeaselMessage:     "Progress detected! Your muscles are literally growing as we speak!",
 		},
 		{
@@ -163,9 +194,9 @@ func SeedInitialData() error {
 			Description:       "Deadlift 100lbs or more",
 			Category:          "strength",
 			Icon:              "🏋️",
-			Target:            100,
+			Target:            centuryClubTarget,
 			IsFakeAchievement: false,
-			RarityPercent:     25,
+			RarityPercent:     centuryClubRarity,
 			WeaselMessage:     "Welcome to the big leagues! You're stronger than 75% of humans!",
 		},
 		// Social achievements
@@ -174,9 +205,9 @@ func SeedInitialData() error {
 			Description:       "Help your buddy complete 5 workouts",
 			Category:          "social",
 			Icon:              "🤝",
-			Target:            5,
+			Target:            teamPlayerTarget,
 			IsFakeAchievement: false,
-			RarityPercent:     40,
+			RarityPercent:     teamPlayerRarity,
 			WeaselMessage:     "You're not just getting swole, you're helping others get swole too!",
 		},
 		// Funny/Creative achievements
@@ -185,9 +216,9 @@ func SeedInitialData() error {
 			Description:       "Work out at 3 different times of day",
 			Category:          "funny",
 			Icon:              "🍷",
-			Target:            3,
+			Target:            sweatSommelierTarget,
 			IsFakeAchievement: false,
-			RarityPercent:     45,
+			RarityPercent:     sweatSommelierRarity,
 			WeaselMessage:     "You've mastered the art of perspiration timing!",
 		},
 		{
@@ -195,15 +226,15 @@ func SeedInitialData() error {
 			Description:       "Complete 100 total workouts",
 			Category:          "consistency",
 			Icon:              "🗣️",
-			Target:            100,
+			Target:            gymWhispererTarget,
 			IsFakeAchievement: true, // This one's a bit creative
-			RarityPercent:     5,
+			RarityPercent:     gymWhispererRarity,
 			WeaselMessage:     "Legend has it that barbells now listen to your commands...",
 		},
 	}
 
 	if err := DB.Create(&achievements).Error; err != nil {
-		return err
+		return fmt.Errorf("failed to create achievements: %w", err)
 	}
 
 	// Seed some fake social activity

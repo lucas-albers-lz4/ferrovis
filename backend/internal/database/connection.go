@@ -1,3 +1,6 @@
+// Package database provides database connection, configuration, and migration functionality
+// for the Ferrovis fitness tracking application. It handles PostgreSQL connections using GORM
+// and manages database schema migrations including Weasel Mode™ psychological features.
 package database
 
 import (
@@ -10,6 +13,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// DB is the global database connection instance used throughout the application
 var DB *gorm.DB
 
 // Config holds database configuration
@@ -91,10 +95,14 @@ func Close() error {
 
 	sqlDB, err := DB.DB()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}
 
-	return sqlDB.Close()
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+
+	return nil
 }
 
 // getEnv gets an environment variable with a fallback default value

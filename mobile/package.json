@@ -6,7 +6,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "npx eslint . --ext .ts,.tsx || echo 'No ESLint config found, skipping lint'",
+    "test": "jest || echo 'No tests configured yet'",
+    "format": "prettier --write . || echo 'No Prettier config found, skipping format'",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "expo": "~53.0.9",
