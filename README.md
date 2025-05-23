@@ -86,6 +86,58 @@ Ferrovis uses evidence-based psychological techniques and **Full Weasel Mode™*
 - ✅ **Cost-Effective**: Auto-scaling containers
 - ✅ **Production-Ready**: Can handle real traffic
 
+## 🛠️ **Local Development & Testing**
+
+### **Quick Start**
+```bash
+# Setup development environment
+make setup
+
+# Start development servers
+make dev
+
+# Run all tests
+make test
+
+# Run linting
+make lint
+```
+
+### **GitHub Actions Local Testing**
+Test your workflows locally before pushing using [act](https://github.com/nektos/act):
+
+```bash
+# Install act (macOS)
+brew install act
+
+# Test CI pipeline locally
+make act-test
+
+# Test only linting
+make act-lint
+
+# Test only builds
+make act-build
+
+# Test release process
+make act-release
+```
+
+**Benefits:**
+- ✅ Catch CI failures before pushing
+- ✅ Save GitHub Actions minutes
+- ✅ Faster development feedback loop
+- ✅ Test on Apple Silicon with proper configuration
+
+**For detailed troubleshooting and configuration, see [docs/LOCAL_TESTING.md](docs/LOCAL_TESTING.md)**
+
+### **Development Commands**
+- `make help` - Show all available commands
+- `make docker-up` - Start database and services
+- `make backend-run` - Run Go API server locally
+- `make mobile-start` - Start React Native development server
+- `make db-reset` - Reset database with fresh schema
+
 ## 📊 **Target Users**
 
 ### **Primary: Absolute Beginner Lifters**
@@ -169,4 +221,4 @@ MIT License - feel free to learn from and adapt this code for your own projects.
 
 ---
 
-**Built with ❤️ for the fitness community** 
+**Built with ❤️ for the fitness community**
