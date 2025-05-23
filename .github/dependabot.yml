@@ -37,3 +37,14 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-patch", "version-update:semver-minor", "version-update:semver-major"]
+
+  - package-ecosystem: "docker" # Docker containers
+    directory: "/backend" # Location of docker-compose.yml
+    schedule:
+      interval: "weekly"
+    # Only raise pull requests for security updates
+    open-pull-requests-limit: 0
+    # Enable security updates
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch", "version-update:semver-minor", "version-update:semver-major"]
