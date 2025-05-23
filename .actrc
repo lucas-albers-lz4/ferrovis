@@ -1,0 +1,33 @@
+# Act configuration for Ferrovis local GitHub Actions testing
+# This file configures act to run properly on Apple Silicon Macs
+
+# Use linux/amd64 architecture to avoid M-series chip compatibility issues
+--container-architecture linux/amd64
+
+# Platform mappings for different runner types
+-P ubuntu-latest=nektos/act-environments-ubuntu:18.04
+-P ubuntu-22.04=nektos/act-environments-ubuntu:22.04
+-P ubuntu-20.04=nektos/act-environments-ubuntu:20.04
+
+# Use self-hosted for macOS if needed
+-P macos-latest=-self-hosted
+
+# Set default artifact server (for actions/upload-artifact, etc.)
+--artifact-server-path /tmp/act-artifacts
+
+# Enable verbose logging for debugging
+--verbose
+
+# Set default secrets (these can be overridden via --secret-file or --secret flags)
+# Note: These are just placeholders for local testing
+-s GITHUB_TOKEN=fake_token_for_local_testing
+
+# Network settings - use host networking to avoid container networking issues
+--use-gitignore=false
+
+# Container options (updated format to replace deprecated --container-cap-add)
+--container-options --cap-add=SYS_PTRACE
+--container-options --cap-add=NET_ADMIN
+
+# Bind mounts for better caching
+--bind

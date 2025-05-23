@@ -1,0 +1,22 @@
+{
+  "name": "ferrovis",
+  "private": true,
+  "workspaces": [
+    "mobile"
+  ],
+  "scripts": {
+    "setup": "npm install && cd mobile && npm install",
+    "dev": "node scripts/dev-coordinator.js",
+    "dev:make": "make dev",
+    "test": "npm run test:mobile",
+    "test:mobile": "cd mobile && npm test",
+    "lint": "npm run lint:mobile",
+    "lint:mobile": "cd mobile && npm run lint",
+    "build": "npm run build:mobile",
+    "build:mobile": "cd mobile && npm run build",
+    "clean": "make clean"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

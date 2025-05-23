@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
+.expo/
+
+# Config files that have specific formatting
+*.config.js
+metro.config.js
+babel.config.js
+
+# Generated files
+coverage/
+*.log

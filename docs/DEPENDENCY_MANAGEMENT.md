@@ -30,10 +30,13 @@
 ### **Deprecation Warnings We Accept**
 ```bash
 # These are transitive dependencies we cannot easily avoid:
-inflight@1.0.6          # Used deep in npm ecosystem
-glob@7.2.3             # Legacy versions in build tools  
+inflight@1.0.6          # Used deep in npm ecosystem (Jest, npm tools)
+glob@7.2.3             # Legacy versions in build tools (Jest transforms)
 rimraf@3.0.2           # Older cleanup utilities
 @babel/plugin-proposal* # Babel legacy plugins
+domexception@4.0.0     # Jest testing environment (use platform native instead)
+abab@2.0.6             # Jest testing environment (use platform native instead)
+@testing-library/jest-native@5.4.3  # DEPRECATED: Use built-in Jest matchers in @testing-library/react-native v12.4+
 ```
 
 ### **Why We Accept These**
@@ -169,7 +172,7 @@ npx npm-check-updates
     "expo": "~53.0.9",           // Minor updates only
     "react": "19.0.0"            // Exact version
   },
-  
+
   // Development dependencies: flexible
   "devDependencies": {
     "@babel/core": "^7.24.0",    // Allow minor updates
@@ -206,4 +209,4 @@ npx npm-check-updates
 
 ---
 
-**Remember**: Perfect dependency hygiene is less important than shipping working software. Focus on security and functionality over eliminating every warning. 
+**Remember**: Perfect dependency hygiene is less important than shipping working software. Focus on security and functionality over eliminating every warning.

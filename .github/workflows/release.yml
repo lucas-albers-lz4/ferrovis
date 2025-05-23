@@ -1,0 +1,313 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+
+permissions: {}  # Set default permissions to none
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ferrovis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      # Backend linting and testing
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.3
+      - name: Run backend linting
+        uses: golangci/golangci-lint-action@v7
+        with:
+          working-directory: backend
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: ferrovis_test
+          DB_SSLMODE: disable
+        run: go test ./... -v -race
+
+      # Mobile type checking
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+      - name: Run mobile type check
+        working-directory: mobile
+        run: npm run type-check
+
+  build-backend:
+    needs: lint-and-test
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            runner: ubuntu-latest
+          - goos: linux
+            goarch: arm64
+            runner: ubuntu-latest
+          - goos: darwin
+            goarch: amd64
+            runner: macos-latest
+          - goos: darwin
+            goarch: arm64
+            runner: macos-latest
+          - goos: windows
+            goarch: amd64
+            runner: windows-latest
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.3
+
+      - name: Get version from tag
+        id: get_version
+        shell: bash
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Build backend binary for ${{ matrix.goos }}/${{ matrix.goarch }}
+        working-directory: backend
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          BINARY_NAME="ferrovis"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="ferrovis.exe"
+          fi
+
+          go build -ldflags="-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" \
+            -o bin/${BINARY_NAME} \
+            cmd/server/main.go
+
+          echo "Built binary: bin/${BINARY_NAME}"
+          ls -la bin/
+
+      - name: Create distribution package for ${{ matrix.goos }}/${{ matrix.goarch }}
+        shell: bash
+        run: |
+          DIST_DIR="_dist"
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          PACKAGE_NAME="ferrovis-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+
+          mkdir -p ${DIST_DIR}
+
+          # Create package directory
+          mkdir -p ${DIST_DIR}/${PACKAGE_NAME}
+
+          # Copy binary
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            cp backend/bin/ferrovis.exe ${DIST_DIR}/${PACKAGE_NAME}/
+          else
+            cp backend/bin/ferrovis ${DIST_DIR}/${PACKAGE_NAME}/
+          fi
+
+          # Copy documentation and config files
+          cp README.md ${DIST_DIR}/${PACKAGE_NAME}/ || echo "README.md not found"
+          cp docker-compose.yml ${DIST_DIR}/${PACKAGE_NAME}/ || echo "docker-compose.yml not found"
+
+          # Create archive
+          cd ${DIST_DIR}
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            # Use zip for Windows
+            zip -r ${PACKAGE_NAME}.zip ${PACKAGE_NAME}/
+            echo "Created ${PACKAGE_NAME}.zip"
+          else
+            # Use tar.gz for Unix-like systems
+            tar -czf ${PACKAGE_NAME}.tar.gz ${PACKAGE_NAME}/
+            echo "Created ${PACKAGE_NAME}.tar.gz"
+          fi
+
+          ls -la
+
+      - name: Upload backend artifact for ${{ matrix.goos }}/${{ matrix.goarch }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ferrovis-backend-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            _dist/*.tar.gz
+            _dist/*.zip
+          retention-days: 1
+
+  build-docker:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        working-directory: backend
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          docker build -t ferrovis:${VERSION} -t ferrovis:latest .
+
+          # Save image to file
+          mkdir -p ../dist
+          docker save ferrovis:${VERSION} | gzip > ../dist/ferrovis-${VERSION}-docker.tar.gz
+          echo "Created Docker image archive: ferrovis-${VERSION}-docker.tar.gz"
+
+      - name: Upload Docker artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ferrovis-docker
+          path: dist/ferrovis-*-docker.tar.gz
+          retention-days: 1
+
+  release:
+    needs: [build-backend, build-docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          echo "🔍 Searching for release artifacts..."
+
+          # Find and copy all release files
+          find artifacts/ -name '*.tar.gz' -type f -print -exec cp {} release-files/ \;
+          find artifacts/ -name '*.zip' -type f -print -exec cp {} release-files/ \;
+
+          echo "📦 Release files prepared:"
+          ls -la release-files/
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## 🚀 Ferrovis ${{ steps.get_version.outputs.VERSION }}
+
+          ### 🏋️ Iron Strength Fitness App Release
+
+          **What's New:**
+          - Full Weasel Mode™ psychological manipulation features
+          - Fitness tracking and workout management
+          - Buddy accountability system
+          - Achievement and progress tracking
+
+          ### 📦 Downloads
+
+          **Backend Server:**
+          - Linux (AMD64): `ferrovis-${{ steps.get_version.outputs.VERSION }}-linux-amd64.tar.gz`
+          - Linux (ARM64): `ferrovis-${{ steps.get_version.outputs.VERSION }}-linux-arm64.tar.gz`
+          - macOS (Intel): `ferrovis-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz`
+          - macOS (Apple Silicon): `ferrovis-${{ steps.get_version.outputs.VERSION }}-darwin-arm64.tar.gz`
+          - Windows (AMD64): `ferrovis-${{ steps.get_version.outputs.VERSION }}-windows-amd64.zip`
+          - Docker Image: `ferrovis-${{ steps.get_version.outputs.VERSION }}-docker.tar.gz`
+
+          ### 🚀 Quick Start
+
+          1. Download the appropriate binary for your platform
+          2. Extract the archive
+          3. Run `./ferrovis` (or `ferrovis.exe` on Windows)
+          4. Visit `http://localhost:8080/health` to verify the server is running
+
+          ### 🐳 Docker Quick Start
+
+          ```bash
+          # Load the Docker image
+          docker load < ferrovis-${{ steps.get_version.outputs.VERSION }}-docker.tar.gz
+
+          # Run with Docker Compose
+          docker compose up
+          ```
+
+          For full setup instructions, see the [README.md](https://github.com/${{ github.repository }}/blob/main/README.md).
+          EOF
+
+          echo "Release notes generated"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: "Ferrovis ${{ steps.get_version.outputs.VERSION }} - Iron Strength Release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
