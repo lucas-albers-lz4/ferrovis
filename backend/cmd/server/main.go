@@ -14,6 +14,13 @@ import (
 	"github.com/lucas-albers-lz4/ferrovis/internal/database"
 )
 
+// Version information (injected at build time)
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
 const (
 	// HTTP status code constants to avoid magic numbers
 	statusOK                  = http.StatusOK
@@ -30,6 +37,12 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found, using environment variables")
 	}
+
+	// Log version information
+	slog.Info("Starting Ferrovis API server",
+		"version", version,
+		"commit", commit,
+		"build_date", date)
 
 	// Connect to database
 	if err := database.Connect(); err != nil {
@@ -61,8 +74,21 @@ func main() {
 	// Health check endpoint
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(statusOK, gin.H{
-			"status":  "ok",
-			"message": "Ferrovis API is running",
+			"status":     "ok",
+			"message":    "Ferrovis API is running",
+			"version":    version,
+			"commit":     commit,
+			"build_date": date,
+		})
+	})
+
+	// Version endpoint
+	r.GET("/version", func(c *gin.Context) {
+		c.JSON(statusOK, gin.H{
+			"version":    version,
+			"commit":     commit,
+			"build_date": date,
+			"service":    "ferrovis-api",
 		})
 	})
 
