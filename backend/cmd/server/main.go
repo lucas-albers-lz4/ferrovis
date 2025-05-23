@@ -193,20 +193,23 @@ func main() {
 	auth.POST("/login", loginHandler)
 
 	// Protected routes (will add JWT middleware later)
-	protected := api.Group("/")
-
 	// User routes
-	protected.GET("/user/profile", getUserProfile)
-	protected.PUT("/user/profile", updateUserProfile)
+	api.GET("/user/profile", getUserProfile)
+	api.PUT("/user/profile", updateUserProfile)
 
 	// Workout routes
-	protected.POST("/workouts", createWorkout)
-	protected.GET("/workouts", getWorkouts)
-	protected.GET("/workouts/:id", getWorkout)
+	api.POST("/workouts", createWorkout)
+	api.GET("/workouts", getWorkouts)
+	api.GET("/workouts/:id", getWorkout)
+
+	// Program routes - NEW
+	api.GET("/programs", getPrograms)
+	api.GET("/programs/:id", getProgram)
+	api.GET("/programs/:id/next-workout", getNextWorkout)
 
 	// Buddy routes
-	protected.POST("/buddies/invite", inviteBuddy)
-	protected.GET("/buddies", getBuddies)
+	api.POST("/buddies/invite", inviteBuddy)
+	api.GET("/buddies", getBuddies)
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -257,4 +260,91 @@ func inviteBuddy(c *gin.Context) {
 
 func getBuddies(c *gin.Context) {
 	c.JSON(statusOK, gin.H{"message": "Get buddies - TODO"})
+}
+
+// Program handlers
+func getPrograms(c *gin.Context) {
+	var programs []database.Program
+	if err := database.DB.Find(&programs).Error; err != nil {
+		c.JSON(statusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to fetch programs",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(statusOK, gin.H{
+		"status":   "ok",
+		"programs": programs,
+	})
+}
+
+func getProgram(c *gin.Context) {
+	id := c.Param("id")
+	var program database.Program
+
+	if err := database.DB.First(&program, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  "error",
+			"message": "Program not found",
+		})
+		return
+	}
+
+	c.JSON(statusOK, gin.H{
+		"status":  "ok",
+		"program": program,
+	})
+}
+
+func getNextWorkout(c *gin.Context) {
+	programID := c.Param("id")
+
+	// For now, return a basic next workout based on Starting Strength
+	// This is a simplified version - real implementation would track user progress
+	var program database.Program
+	if err := database.DB.First(&program, programID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  "error",
+			"message": "Program not found",
+		})
+		return
+	}
+
+	// Basic workout structure for Starting Strength/5x5 programs
+	nextWorkout := gin.H{
+		"program_name": program.Name,
+		"workout_day":  "A", // Alternate between A/B
+		"exercises": []gin.H{
+			{
+				"name":         "Squat",
+				"sets":         3,
+				"reps":         5,
+				"weight":       "start_weight + progression", // Will be calculated based on user
+				"instructions": "Stand with feet shoulder-width apart, lower body by bending knees and hips",
+			},
+			{
+				"name":         "Bench Press",
+				"sets":         3,
+				"reps":         5,
+				"weight":       "start_weight + progression",
+				"instructions": "Lie on bench, lower barbell to chest, then press back up",
+			},
+			{
+				"name":         "Barbell Row",
+				"sets":         3,
+				"reps":         5,
+				"weight":       "start_weight + progression",
+				"instructions": "Bend at hips, pull barbell from arm's length to lower chest",
+			},
+		},
+		"estimated_duration": "45-60 minutes",
+		"rest_between_sets":  "3-5 minutes for compound movements",
+	}
+
+	c.JSON(statusOK, gin.H{
+		"status":       "ok",
+		"next_workout": nextWorkout,
+	})
 }
