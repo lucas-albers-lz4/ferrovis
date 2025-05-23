@@ -1,0 +1,38 @@
+# .dockerignore for Ferrovis backend
+
+# Git files
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Development files
+.env.local
+.env.development
+*.log
+
+# Build artifacts
+bin/
+tmp/
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+*_test.go
+test/
+coverage.*
+
+# Development scripts
+scripts/
+Makefile 
