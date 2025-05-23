@@ -198,16 +198,6 @@ docs: ## Generate and serve documentation
 	@echo "🔧 DEVELOPMENT.md - Development setup"
 	@echo "📋 TODO.md - Implementation plan"
 
-## 🌐 Git & Deployment Commands
-git-setup: ## Initialize git repository and create GitHub repo
-	@echo "🌐 Setting up Ferrovis git repository..."
-	@git add .
-	@git commit -m "feat: initial Ferrovis (Iron Strength) project setup with weasel mode"
-	@gh repo create ferrovis --public --description "Iron Strength - Fitness accountability app with Full Weasel Mode™ psychological manipulation"
-	@git remote add origin https://github.com/lucas-albers-lz4/ferrovis.git
-	@git push -u origin main
-	@echo "✅ Repository created at https://github.com/lucas-albers-lz4/ferrovis"
-
 deploy-staging: ## Deploy to staging environment
 	@echo "🚀 Deploying Ferrovis to staging..."
 	@echo "TODO: Implement staging deployment"
