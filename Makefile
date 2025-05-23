@@ -133,6 +133,14 @@ ci-validate: ## Validate CI pipeline locally before pushing
 	@echo "🚀 Validating CI pipeline locally..."
 	@./scripts/validate-ci.sh
 
+release-validate: ## Validate release build process locally
+	@echo "🚀 Validating release build process..."
+	@./scripts/validate-release.sh
+
+release-test: ## Test release build with custom version
+	@echo "🚀 Testing release build with version v0.0.0-test..."
+	@./scripts/validate-release.sh v0.0.0-test
+
 ## 🏗️ Build Commands
 build: ## Build all components (backend + mobile)
 	@echo "🏗️ Building all Ferrovis components..."
