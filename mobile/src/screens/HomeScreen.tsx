@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { checkApiHealth } from '../services/api';
 
 export default function HomeScreen() {
-  const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [apiStatus, setApiStatus] = useState<
+    'checking' | 'connected' | 'disconnected'
+  >('checking');
 
   useEffect(() => {
     checkConnection();
@@ -41,7 +43,7 @@ export default function HomeScreen() {
     Alert.alert(
       'Welcome to LiftBuddy! 🏋️',
       'Your fitness accountability companion is ready to help you build lasting lifting habits.',
-      [{ text: 'Let\'s Go!', style: 'default' }]
+      [{ text: "Let's Go!", style: 'default' }]
     );
   };
 
@@ -49,12 +51,15 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>LiftBuddy</Text>
       <Text style={styles.subtitle}>Your Fitness Accountability Partner</Text>
-      
+
       <View style={styles.statusContainer}>
         <Text style={[styles.statusText, { color: getStatusColor() }]}>
           {getStatusText()}
         </Text>
-        <TouchableOpacity style={styles.refreshButton} onPress={checkConnection}>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={checkConnection}
+        >
           <Text style={styles.refreshButtonText}>Refresh</Text>
         </TouchableOpacity>
       </View>
@@ -67,13 +72,14 @@ export default function HomeScreen() {
         <Text style={styles.featureItem}>• Beginner-friendly programs</Text>
       </View>
 
-      <TouchableOpacity style={styles.welcomeButton} onPress={showWelcomeMessage}>
+      <TouchableOpacity
+        style={styles.welcomeButton}
+        onPress={showWelcomeMessage}
+      >
         <Text style={styles.welcomeButtonText}>Welcome Message</Text>
       </TouchableOpacity>
 
-      <Text style={styles.footerText}>
-        Built with Expo + React Native + Go
-      </Text>
+      <Text style={styles.footerText}>Built with Expo + React Native + Go</Text>
     </View>
   );
 }
@@ -168,4 +174,4 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 20,
   },
-}); 
+});

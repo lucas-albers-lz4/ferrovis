@@ -69,7 +69,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -103,14 +103,18 @@ class ApiClient {
   }
 
   // Authentication endpoints
-  async register(data: RegisterRequest): Promise<ApiResponse<{ user: User; token: string }>> {
+  async register(
+    data: RegisterRequest
+  ): Promise<ApiResponse<{ user: User; token: string }>> {
     return this.request('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async login(data: LoginRequest): Promise<ApiResponse<{ user: User; token: string }>> {
+  async login(
+    data: LoginRequest
+  ): Promise<ApiResponse<{ user: User; token: string }>> {
     return this.request('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -169,4 +173,4 @@ export const checkApiHealth = async (): Promise<boolean> => {
   } catch {
     return false;
   }
-}; 
+};
