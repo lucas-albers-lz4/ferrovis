@@ -129,6 +129,10 @@ lint: ## Run all linting (backend + mobile)
 	@make backend-lint
 	@make mobile-lint
 
+ci-validate: ## Validate CI pipeline locally before pushing
+	@echo "🚀 Validating CI pipeline locally..."
+	@./scripts/validate-ci.sh
+
 ## 🏗️ Build Commands
 build: ## Build all components (backend + mobile)
 	@echo "🏗️ Building all Ferrovis components..."
@@ -146,7 +150,7 @@ docs: ## Generate and serve documentation
 	@echo "🔧 DEVELOPMENT.md - Development setup"
 	@echo "📋 TODO.md - Implementation plan"
 
-## 🌐 Git & Deployment Commands  
+## 🌐 Git & Deployment Commands
 git-setup: ## Initialize git repository and create GitHub repo
 	@echo "🌐 Setting up Ferrovis git repository..."
 	@git add .
@@ -200,4 +204,4 @@ stats: ## Show project statistics
 	@echo "Total lines of code: $(shell find backend mobile -name '*.go' -o -name '*.ts' -o -name '*.tsx' | xargs wc -l | tail -1 | awk '{print $$1}')"
 
 # Include environment-specific makefiles if they exist
--include Makefile.local 
+-include Makefile.local
