@@ -32,8 +32,8 @@ func LoadConfig() *Config {
 		Host:     getEnv("DB_HOST", "localhost"),
 		Port:     getEnv("DB_PORT", "5432"),
 		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", ""),
-		DBName:   getEnv("DB_NAME", "liftbuddy_dev"),
+		Password: getEnv("DB_PASSWORD", "ferrovis123"),
+		DBName:   getEnv("DB_NAME", "ferrovis_dev"),
 		SSLMode:  getEnv("DB_SSLMODE", "disable"),
 	}
 }
