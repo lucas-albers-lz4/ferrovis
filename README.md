@@ -1,6 +1,6 @@
 # ⚡ Ferrovis
 
-**Iron Strength** - A mobile-first fitness accountability app designed for absolute beginner weight lifters. Track your workouts, connect with a buddy or coach, and build sustainable lifting habits through social accountability and smart motivational techniques with **Full Weasel Mode™** psychological manipulation.
+**Iron Strength** - A mobile-first fitness accountability app designed for absolute beginner weight lifters. Track your workouts, connect with a buddy or coach, and build sustainable lifting habits through social accountability and smart motivational techniques.
 
 ## 🎯 **Core Problem**
 
@@ -49,7 +49,7 @@ Most fitness apps are complex and intimidating for beginners. Ferrovis focuses o
 
 ## 🧠 **Motivational Psychology**
 
-Ferrovis uses evidence-based psychological techniques and **Full Weasel Mode™** to build lasting habits:
+Ferrovis uses evidence-based psychological techniques to build lasting habits:
 
 ### **Social Accountability**
 - **Buddy Visibility**: Friends see your workout completion status
